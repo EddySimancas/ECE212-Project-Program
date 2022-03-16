@@ -1,5 +1,5 @@
-#include "Global.h"
-#include "Functions.h"
+#include "Global.h".      // this library was created by Eddy Simancas and can be found in a different file
+#include "Functions.h".   // this library was created by Eddy Simancas and can be found in a different file
 
 void setup() {
   // call all functions needed for sensor to work
