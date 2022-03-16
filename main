@@ -1,0 +1,130 @@
+#include "Global.h"
+#include "Functions.h"
+
+void setup() {
+  // call all functions needed for sensor to work
+  beginSetUp(); 
+
+  // start the user interface program
+  userInterface();
+}
+
+void userInterface(void){
+  // this function is the touchscreens user interface
+  
+  // Display the home screen when Life Saver is turned on
+  homeScreen(rotation);
+  
+  while(1){
+    // map the touchscreen inputs to match the screens orientation
+    // look for a user input
+    setTouchPoints(rotation);
+
+    //use the functions which are supplied by library.
+    float h = dht.readHumidity();
+    // Read temperature as Fahrenheit
+    float t = dht.readTemperature(1);
+    if (isnan(h)){
+      h = humidData[currentIndex];
+    }
+    if (isnan(t)){
+      t = tempData[currentIndex];
+    }
+
+    // reset the index value back to 0
+    if(currentIndex >= 24){
+      currentIndex = 23;
+      updateArray(CO2Data);
+      updateArray(TVOCData);
+      updateArray(tempData);
+      updateArray(humidData);
+    }
+
+    // start a timer that will indicate when to store sensor data
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+      // save the last recorded sensor value 
+      previousMillis += interval;
+      CO2Data[currentIndex] = sgp.eCO2;
+      TVOCData[currentIndex] = sgp.TVOC;
+      tempData[currentIndex] = (int) t;
+      humidData[currentIndex] = (int) h;
+      currentIndex = currentIndex + 1;
+    }
+
+    // display sensor data on screen
+    displaySensorValues(h, t);
+
+    // if eCO2 button is pressed
+    if(buttonIsPressed(XMIN_eCO2, XMAX_eCO2, YMIN_eCO2, YMAX_eCO2)){
+      // graph the past eCO2 data over the last 24 hours
+      graphData(rotation, CO2Data, "Past CO2 Data", " Time [Hours]", "CO2 [ppm]");
+      // return to the home screen
+      homeScreen(rotation);
+      clearBuffer();
+    }
+
+    // if TVOC button is pressed
+    if(buttonIsPressed(XMIN_TVOC, XMAX_TVOC, YMIN_TVOC, YMAX_TVOC)){
+      graphData(rotation, TVOCData, "Past TVOC Data", " Time [Hours]", "TVOC [ppb]");
+      homeScreen(rotation);
+      clearBuffer();
+    }
+
+    // if temp button is pressed
+    if(buttonIsPressed(XMIN_TEMP, XMAX_TEMP, YMIN_TEMP, YMAX_TEMP)){
+      graphData(rotation, tempData, "Past Temperature Data", " Time [Hours]", "Degrees [F]");
+      homeScreen(rotation);
+      clearBuffer();
+    }
+
+    // if humid button is pressed
+    if(buttonIsPressed(XMIN_HUMID, XMAX_HUMID, YMIN_HUMID, YMAX_HUMID)){
+      graphData(rotation, humidData, "Past Humidity Data", " Time [Hours]", " %rh");
+      homeScreen(rotation);
+      clearBuffer();
+    }
+
+    // if settings button is pressed
+    if(buttonIsPressed(XMIN_SET, XMAX_SET, YMIN_SET, YMAX_SET)){
+      while(1){
+        // display settings screen
+        settingsScreen();
+        while(1){
+          // look for user input
+          setTouchPoints(rotation);
+  
+          // if home button is pressed, return home
+          if(buttonIsPressed(XMIN_HOME, XMAX_HOME, YMIN_HOME, YMAX_HOME)){
+            break;
+          }
+  
+          // if CO2 settings button is pressed
+          if(buttonIsPressed(XMIN_B1, XMAX_B1, YMIN_B1, YMAX_B1)){
+            clearBuffer();
+            eCO2Settings();
+            break;
+          }
+  
+          // if VOC settings button is pressed
+          if(buttonIsPressed(XMIN_B2, XMAX_B2, YMIN_B2, YMAX_B2)){
+            clearBuffer();
+            TVOCSettings();
+            break;
+          }
+          
+        }
+        // if home button is pressed
+        if(buttonIsPressed(XMIN_HOME, XMAX_HOME, YMIN_HOME, YMAX_HOME)){
+          break;
+        }
+      }
+      // return home
+      homeScreen(rotation);
+    }
+  }
+}
+
+void loop() {
+
+}
